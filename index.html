@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex, nofollow">
+<title>Trading AI Assistant — iOS Technical Plan</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%23111'/><text x='32' y='46' text-anchor='middle' font-family='monospace' font-size='28' font-weight='700' fill='%2334D399'>◉</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0C0D0F;--card:#141517;--line:#222528;--ink:#E4E5E9;--dim:#6A6D75;--green:#34D399;--red:#F87171;--blue:#60A5FA;--amber:#FBBF24;--purple:#A78BFA;--mono:"IBM Plex Mono",ui-monospace,monospace;--sans:"Inter",-apple-system,sans-serif;box-sizing:border-box;padding-top:env(safe-area-inset-top,0);padding-bottom:env(safe-area-inset-bottom,0)}
+*,*::before,*::after{box-sizing:inherit}html{background:var(--bg)}
+body{margin:0;color:var(--ink);font:15px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+button,select{font:inherit;color:inherit;cursor:pointer}:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+[hidden]{display:none!important}
+header{position:sticky;top:env(safe-area-inset-top,0);background:var(--bg);border-bottom:1px solid var(--line);z-index:20}
+.hbar{display:flex;justify-content:space-between;align-items:center;padding:14px 28px 0;flex-wrap:wrap;gap:10px}
+.logo{font:700 17px var(--sans);display:flex;align-items:center;gap:10px}
+.logo span{color:var(--green)}
+.by{font:13px var(--mono);color:var(--dim)}
+.tabs{display:flex;gap:0;padding:0 28px;overflow-x:auto}
+.tabs button{background:none;border:none;border-bottom:2px solid transparent;padding:12px 16px;font:500 13.5px var(--sans);color:var(--dim);white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--green);border-bottom-color:var(--green)}
+.panel{padding:20px 28px 48px;max-width:1200px;margin:0 auto}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}
+.box.full{grid-column:1/-1}
+.box h2{margin:0 0 4px;font-size:17px;font-weight:700}.box h3{margin:0 0 6px;font-size:14px;font-weight:700}
+.dim{color:var(--dim);font-size:13px;margin:0 0 12px}
+
+/* Architecture diagram */
+.arch svg{display:block;width:100%;max-height:400px}
+.abx{fill:#1A1D20;stroke:#2A2D33;rx:6}
+.abx.hl{stroke:var(--green)}
+.atx{fill:var(--ink);font:12px var(--sans)}.atx.sm{fill:var(--dim);font:11px var(--sans)}
+.atx.gr{fill:var(--green);font:600 12px var(--sans)}
+.aln{stroke:#2A2D33;stroke-width:1}
+.aln.gr{stroke:var(--green);stroke-width:1.5}
+
+/* State machine */
+.sm{position:relative}.states{display:grid;gap:0}
+.state{display:grid;grid-template-columns:140px 1fr;gap:14px;padding:14px 0;border-bottom:1px solid #1A1D20;align-items:center}
+.state:last-child{border-bottom:0}
+.sname{font:600 13px var(--mono);padding:8px 12px;border-radius:6px;text-align:center}
+.sname.wait{background:#1A2A20;color:var(--green);border:1px solid #2A4A30}
+.sname.watch{background:#1A1E2E;color:var(--blue);border:1px solid #2A3A5E}
+.sname.conf{background:#2A1E2E;color:var(--purple);border:1px solid #4A2A6E}
+.sname.inv{background:#2A1A1A;color:var(--red);border:1px solid #5A2A2A}
+.sname.act{border-width:2px;box-shadow:0 0 12px rgba(52,211,153,.2)}
+.sdesc{font-size:13px;color:var(--dim)}
+.sdesc b{color:var(--ink)}
+.arrow-down{text-align:center;color:#333;font-size:14px;padding:2px 0}
+
+/* Interactive state machine */
+.smctl{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.btn{border:none;border-radius:6px;padding:8px 14px;font:600 12px var(--sans)}
+.btn.gr{background:var(--green);color:#000}.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
+
+/* Code */
+pre{font:12.5px/1.55 var(--mono);background:#0A0B0D;border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;margin:0 0 12px;color:#D4D6DB}
+.ck{color:var(--dim)}.cg{color:var(--green)}.cb{color:var(--blue)}.cp{color:var(--purple)}.cs{color:#A6DA95}.cn{color:var(--amber)}
+
+/* Latency */
+.lat{display:grid;gap:6px;margin-top:8px}
+.latrow{display:grid;grid-template-columns:180px 1fr 60px;gap:10px;align-items:center;font-size:13px}
+.latbar{height:20px;background:#1A1D20;border-radius:4px;overflow:hidden;position:relative}
+.latbar::after{content:'';position:absolute;left:0;top:0;height:100%;width:var(--w);border-radius:4px}
+.latbar.fast::after{background:var(--green)}.latbar.med::after{background:var(--amber)}.latbar.slow::after{background:var(--red)}
+
+/* Alerts */
+.alerts{display:grid;gap:8px;margin-top:10px}
+.alert{display:grid;grid-template-columns:auto 1fr;gap:12px;background:#1A1D20;border-radius:8px;padding:12px 14px;font-size:13px;align-items:center}
+.alert .voice{font:600 16px var(--mono);white-space:nowrap}
+.alert .voice.g{color:var(--green)}.alert .voice.b{color:var(--blue)}.alert .voice.r{color:var(--red)}.alert .voice.a{color:var(--amber)}.alert .voice.p{color:var(--purple)}
+
+.foot{margin-top:28px;border-top:1px solid var(--line);padding-top:12px;font-size:12px;color:var(--dim)}
+@media(max-width:900px){.g2,.g3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hbar"><div class="logo"><span>◉</span> Trading AI Assistant</div><span class="by">iOS technical plan by James</span></div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="arch">Architecture</button>
+    <button role="tab" data-tab="logic">Trading logic</button>
+    <button role="tab" data-tab="code">Key code</button>
+    <button role="tab" data-tab="plan">Delivery</button>
+  </nav>
+</header>
+
+<!-- ARCHITECTURE -->
+<section id="arch" class="panel">
+  <div class="g2">
+    <div class="box full">
+      <h2>Screen capture → AI → voice pipeline</h2>
+      <p class="dim">The Broadcast Upload Extension runs in a separate iOS process, so it keeps receiving frames even when Tradovate/TradingView is in the foreground.</p>
+      <div class="arch">
+        <svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg" fill="none">
+          <!-- Trading app -->
+          <rect class="abx" x="30" y="30" width="160" height="50"/><text class="atx" x="110" y="55" text-anchor="middle" font-weight="600">Tradovate / TradingView</text><text class="atx sm" x="110" y="72" text-anchor="middle">Foreground app</text>
+          <!-- ReplayKit -->
+          <rect class="abx hl" x="30" y="120" width="160" height="50"/><text class="atx gr" x="110" y="145" text-anchor="middle">ReplayKit</text><text class="atx sm" x="110" y="160" text-anchor="middle">Broadcast Upload Extension</text>
+          <line class="aln gr" x1="110" y1="80" x2="110" y2="120" stroke-dasharray="4"/>
+          <text class="atx sm" x="195" y="105" fill="#555">iOS captures frames</text>
+          <!-- Frame pipeline -->
+          <rect class="abx" x="250" y="120" width="160" height="50"/><text class="atx" x="330" y="145" text-anchor="middle" font-weight="600">Frame Diff Filter</text><text class="atx sm" x="330" y="162" text-anchor="middle">Skip unchanged frames</text>
+          <line class="aln gr" x1="190" y1="145" x2="250" y2="145"/>
+          <rect class="abx" x="470" y="120" width="160" height="50"/><text class="atx" x="550" y="145" text-anchor="middle" font-weight="600">JPEG Compress</text><text class="atx sm" x="550" y="162" text-anchor="middle">~100KB, 1 FPS to AI</text>
+          <line class="aln" x1="410" y1="145" x2="470" y2="145"/>
+          <rect class="abx hl" x="690" y="120" width="180" height="50"/><text class="atx gr" x="780" y="145" text-anchor="middle">GPT-4o Vision API</text><text class="atx sm" x="780" y="162" text-anchor="middle">Chart analysis + setup detection</text>
+          <line class="aln gr" x1="630" y1="145" x2="690" y2="145"/>
+          <!-- State machine -->
+          <rect class="abx hl" x="470" y="230" width="160" height="50"/><text class="atx gr" x="550" y="255" text-anchor="middle">Setup State Machine</text><text class="atx sm" x="550" y="272" text-anchor="middle">Context→Liq→Displ→OB→...</text>
+          <line class="aln gr" x1="780" y1="170" x2="780" y2="255" /><line class="aln gr" x1="780" y1="255" x2="630" y2="255"/>
+          <!-- Voice -->
+          <rect class="abx" x="250" y="230" width="160" height="50"/><text class="atx" x="330" y="255" text-anchor="middle" font-weight="600">AVSpeechSynthesizer</text><text class="atx sm" x="330" y="272" text-anchor="middle">Spoken alerts</text>
+          <line class="aln gr" x1="470" y1="255" x2="410" y2="255"/>
+          <!-- IPC -->
+          <rect class="abx" x="250" y="320" width="380" height="40"/><text class="atx sm" x="440" y="345" text-anchor="middle">App Group shared memory (IPC between extension and main app)</text>
+          <line class="aln" x1="330" y1="170" x2="330" y2="320" stroke-dasharray="3"/><line class="aln" x1="550" y1="280" x2="550" y2="320" stroke-dasharray="3"/>
+          <!-- Labels -->
+          <rect x="30" y="230" width="160" height="50" fill="#1A2A20" stroke="#2A4A30" rx="6"/><text x="110" y="252" text-anchor="middle" fill="var(--green)" font-family="IBM Plex Mono" font-weight="600" font-size="14">"WATCH LONG"</text><text class="atx sm" x="110" y="272" text-anchor="middle">Spoken to trader</text>
+          <line class="aln gr" x1="250" y1="255" x2="190" y2="255"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="g3">
+    <div class="box">
+      <h3>Why Broadcast Upload Extension</h3>
+      <p class="dim">iOS does not allow silent background screen capture. The Broadcast Upload Extension is the only Apple-approved mechanism. The user taps "Start Broadcast," and the extension receives frames in a separate process — even when Tradovate is in the foreground. 50MB memory limit in the extension, so frame processing must be lean.</p>
+    </div>
+    <div class="box">
+      <h3>Frame budget</h3>
+      <p class="dim">ReplayKit delivers 30fps. Sending every frame to GPT-4o is too slow and expensive. Instead:</p>
+      <div class="lat">
+        <div class="latrow"><span>Frame diff filter</span><div class="latbar fast" style="--w:20%"></div><span>~1ms</span></div>
+        <div class="latrow"><span>JPEG compress</span><div class="latbar fast" style="--w:15%"></div><span>~5ms</span></div>
+        <div class="latrow"><span>Send to GPT-4o</span><div class="latbar med" style="--w:70%"></div><span>~2-3s</span></div>
+        <div class="latrow"><span>State machine update</span><div class="latbar fast" style="--w:10%"></div><span><1ms</span></div>
+        <div class="latrow"><span>Voice output</span><div class="latbar fast" style="--w:25%"></div><span>~200ms</span></div>
+      </div>
+      <p class="dim" style="margin-top:8px">Effective loop: ~1 analysis per 3 seconds. The state machine holds context between frames, so the AI doesn't restart from scratch each time.</p>
+    </div>
+    <div class="box">
+      <h3>What the AI sees vs. knows</h3>
+      <p class="dim"><b style="color:var(--ink)">Sees (each frame):</b> candle colors, indicator overlays, zone boxes, timeframe label, price levels, Fib lines. GPT-4o Vision is strong at reading chart overlays.</p>
+      <p class="dim"><b style="color:var(--ink)">Knows (system prompt):</b> your complete trading rules. The prompt encodes every step of your setup — Context, Liquidity, Displacement, OB/FVG, Retest, Reaction, Confirmation — so the AI doesn't guess. It applies your rules, not generic TA.</p>
+      <p class="dim"><b style="color:var(--ink)">Remembers (state):</b> what it saw in the last 5-10 frames. If displacement happened 2 frames ago and price is now retesting the OB, it knows where it is in the sequence.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TRADING LOGIC -->
+<section id="logic" class="panel" hidden>
+  <div class="g2">
+    <div class="box">
+      <h2>Your setup as a state machine</h2>
+      <p class="dim">Click through each step to see how the app progresses through your trading logic. The app only alerts when the full sequence completes — not on individual signals.</p>
+      <div class="smctl">
+        <button class="btn gr" id="smstep">Step forward</button>
+        <button class="btn ghost" id="smreset">Reset</button>
+        <span class="dim" id="smstage" style="align-self:center"></span>
+      </div>
+      <div class="states" id="states">
+        <div class="state" data-i="0"><div class="sname wait act">WAIT</div><div class="sdesc"><b>Context</b> — AI reads the higher timeframe structure. Is the market in a trend or range? Which direction has the bias?</div></div>
+        <div class="state" data-i="1"><div class="sname wait">WAIT</div><div class="sdesc"><b>Liquidity / Manipulation</b> — Price sweeps a high or low, taking out stop losses. The AI recognizes a liquidity grab.</div></div>
+        <div class="state" data-i="2"><div class="sname wait">WAIT</div><div class="sdesc"><b>Displacement</b> — Strong, impulsive move away from the sweep. Creates a fair value gap. The AI checks candle body size and momentum.</div></div>
+        <div class="state" data-i="3"><div class="sname watch">WATCH LONG</div><div class="sdesc"><b>OB / FVG identified</b> — The displacement left an order block or FVG behind. The AI marks the zone and watches for price to return to it.</div></div>
+        <div class="state" data-i="4"><div class="sname watch">WATCH LONG</div><div class="sdesc"><b>Retest</b> — Price returns to the OB/FVG zone. The AI confirms price is in the zone, not just near it.</div></div>
+        <div class="state" data-i="5"><div class="sname watch">WATCH LONG</div><div class="sdesc"><b>Reaction</b> — Price shows rejection from the zone: wick, engulfing candle, or shift in lower timeframe structure.</div></div>
+        <div class="state" data-i="6"><div class="sname conf">CONFIRMED LONG</div><div class="sdesc"><b>Confirmation</b> — Full setup complete. AI speaks the alert. Only now, not before.</div></div>
+      </div>
+      <div class="state" style="border-top:1px solid var(--line);margin-top:8px;padding-top:14px"><div class="sname inv">INVALIDATED</div><div class="sdesc"><b>At any step:</b> if price closes through the zone instead of rejecting, the setup is invalid. AI speaks "INVALIDATED" and resets to WAIT.</div></div>
+    </div>
+    <div class="box">
+      <h2>Voice alerts</h2>
+      <p class="dim">Short, spoken feedback. No screen switching needed — the trader hears the alert while watching the chart.</p>
+      <div class="alerts">
+        <div class="alert"><span class="voice a">WAIT</span><div>Setup not yet forming. AI is watching but silent.</div></div>
+        <div class="alert"><span class="voice b">WATCH LONG</span><div>OB/FVG zone identified after displacement. Price approaching for retest.</div></div>
+        <div class="alert"><span class="voice b">WATCH SHORT</span><div>Same sequence, bearish direction.</div></div>
+        <div class="alert"><span class="voice g">CONFIRMED LONG</span><div>Full setup: context ✓ liquidity ✓ displacement ✓ OB/FVG ✓ retest ✓ reaction ✓ confirmation ✓</div></div>
+        <div class="alert"><span class="voice g">CONFIRMED SHORT</span><div>Full bearish setup confirmed.</div></div>
+        <div class="alert"><span class="voice r">INVALIDATED</span><div>Price closed through the zone. Setup canceled. Returns to WAIT.</div></div>
+      </div>
+      <h3 style="margin-top:18px">What the AI does NOT alert on</h3>
+      <div class="alerts">
+        <div class="alert"><span class="voice" style="color:var(--dim);text-decoration:line-through">LONG</span><div>Price touches an order block → no alert. Touch without retest + reaction is not a setup.</div></div>
+        <div class="alert"><span class="voice" style="color:var(--dim);text-decoration:line-through">SHORT</span><div>FVG appears → no alert. An FVG alone is a zone, not a trade.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- KEY CODE -->
+<section id="code" class="panel" hidden>
+  <div class="g2">
+    <div class="box">
+      <h3>Broadcast Upload Extension — SampleHandler.swift</h3>
+      <p class="dim">This is the separate iOS process that receives screen frames while Tradovate is open.</p>
+      <pre><span class="ck">// Runs in a separate process. 50MB memory limit.</span>
+<span class="cp">import</span> ReplayKit
+
+<span class="cb">class</span> <span class="cg">SampleHandler</span>: RPBroadcastSampleHandler {
+    <span class="cp">let</span> bridge = AppGroupBridge(group: <span class="cs">"group.com.app.trading"</span>)
+    <span class="cp">var</span> lastSent: CFAbsoluteTime = <span class="cn">0</span>
+    <span class="cp">let</span> minInterval: CFAbsoluteTime = <span class="cn">3.0</span> <span class="ck">// 1 frame per 3s to AI</span>
+
+    <span class="cp">override func</span> <span class="cg">processSampleBuffer</span>(
+        _ buffer: CMSampleBuffer,
+        with type: RPSampleBufferType
+    ) {
+        <span class="cp">guard</span> type == .video <span class="cp">else</span> { <span class="cp">return</span> }
+        <span class="cp">let</span> now = CFAbsoluteTimeGetCurrent()
+        <span class="cp">guard</span> now - lastSent >= minInterval <span class="cp">else</span> { <span class="cp">return</span> }
+
+        <span class="ck">// Convert frame to JPEG (~100KB)</span>
+        <span class="cp">guard let</span> jpeg = buffer.toJPEG(quality: <span class="cn">0.6</span>) <span class="cp">else</span> { <span class="cp">return</span> }
+
+        <span class="ck">// Check frame changed enough (pixel diff)</span>
+        <span class="cp">if</span> bridge.isDuplicate(jpeg) { <span class="cp">return</span> }
+
+        <span class="ck">// Send to main app via App Group shared memory</span>
+        bridge.write(jpeg)
+        lastSent = now
+    }
+}</pre>
+    </div>
+    <div class="box">
+      <h3>AI analysis + state machine — ChartAnalyzer.swift</h3>
+      <p class="dim">Main app receives frames from the extension and sends to GPT-4o Vision.</p>
+      <pre><span class="cp">func</span> <span class="cg">analyzeFrame</span>(_ jpeg: Data) <span class="cp">async</span> {
+    <span class="cp">let</span> prompt = <span class="cs">"""
+    You are analyzing a live trading chart.
+    Current state: \(stateMachine.current)
+    Last 5 observations: \(stateMachine.history)
+
+    Trading rules:
+    \(tradingRules) </span><span class="ck">// loaded from client's doc</span><span class="cs">
+
+    What do you see? Return JSON:
+    {
+      "timeframe": "5M",
+      "structure": "bullish/bearish/range",
+      "zones": [{"type":"OB/FVG/SD","bias":"bull/bear"}],
+      "price_action": "retesting/rejecting/accepting",
+      "next_state": "WAIT/WATCH_LONG/CONFIRMED/...",
+      "confidence": 0.0-1.0,
+      "reason": "one sentence"
+    }
+    """</span>
+
+    <span class="cp">let</span> result = <span class="cp">try await</span> openAI.vision(
+        image: jpeg,
+        prompt: prompt,
+        model: <span class="cs">"gpt-4o"</span>
+    )
+
+    <span class="ck">// Only transition if confidence > threshold</span>
+    <span class="cp">if</span> result.confidence > <span class="cn">0.7</span> {
+        stateMachine.transition(to: result.nextState)
+    }
+
+    <span class="ck">// Speak alert on state change</span>
+    <span class="cp">if</span> stateMachine.justChanged {
+        voice.speak(stateMachine.current.alert)
+    }
+}</pre>
+    </div>
+    <div class="box">
+      <h3>Voice output — VoiceEngine.swift</h3>
+      <pre><span class="cp">import</span> AVFoundation
+
+<span class="cb">class</span> <span class="cg">VoiceEngine</span> {
+    <span class="cp">private let</span> synth = AVSpeechSynthesizer()
+
+    <span class="cp">func</span> <span class="cg">speak</span>(_ text: String) {
+        <span class="cp">let</span> utterance = AVSpeechUtterance(string: text)
+        utterance.rate = <span class="cn">0.55</span>  <span class="ck">// slightly fast, not rushed</span>
+        utterance.voice = AVSpeechSynthesisVoice(
+            language: <span class="cs">"en-US"</span>
+        )
+        <span class="ck">// Interrupt previous alert if still speaking</span>
+        synth.stopSpeaking(at: .immediate)
+        synth.speak(utterance)
+    }
+}</pre>
+    </div>
+    <div class="box">
+      <h3>App Group IPC — how the extension talks to the main app</h3>
+      <pre><span class="ck">// Shared between extension (writes) and app (reads)</span>
+<span class="cb">class</span> <span class="cg">AppGroupBridge</span> {
+    <span class="cp">let</span> container: URL
+
+    <span class="cp">init</span>(group: String) {
+        container = FileManager.default
+            .containerURL(
+                forSecurityApplicationGroupIdentifier: group
+            )!
+    }
+
+    <span class="cp">func</span> <span class="cg">write</span>(_ frame: Data) {
+        <span class="cp">let</span> url = container
+            .appendingPathComponent(<span class="cs">"frame.jpg"</span>)
+        <span class="cp">try?</span> frame.write(to: url)
+        <span class="ck">// Signal main app via Darwin notification</span>
+        CFNotificationCenterPostNotification(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            <span class="cs">"com.app.trading.newframe"</span> <span class="cp">as</span> CFNotificationName,
+            <span class="cp">nil</span>, <span class="cp">nil</span>, <span class="cn">true</span>
+        )
+    }
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- DELIVERY -->
+<section id="plan" class="panel" hidden>
+  <div class="g2">
+    <div class="box">
+      <h2>Timeline — 3 weeks</h2>
+      <div style="display:grid;gap:10px;margin-top:12px">
+        <div style="background:#1A1D20;border-radius:8px;padding:14px"><b>Week 1</b><br><span style="color:var(--dim);font-size:13px">Broadcast Extension capturing frames while TradingView is open. Frame diff filter. App Group IPC. JPEG pipeline to GPT-4o Vision. First AI responses from your chart. TestFlight build.</span></div>
+        <div style="background:#1A1D20;border-radius:8px;padding:14px"><b>Week 2</b><br><span style="color:var(--dim);font-size:13px">Your trading rules encoded into the system prompt. State machine: WAIT → WATCH → CONFIRMED → INVALIDATED. Voice alerts via AVSpeechSynthesizer. Confidence threshold tuning. Second TestFlight build.</span></div>
+        <div style="background:#1A1D20;border-radius:8px;padding:14px"><b>Week 3</b><br><span style="color:var(--dim);font-size:13px">Your prototype source integrated and refined. Latency optimization. Edge case handling (chart zoom, timeframe switch, indicator overlap). Final TestFlight build. Documentation.</span></div>
+      </div>
+    </div>
+    <div class="box">
+      <h2>Budget — $3,500</h2>
+      <div style="display:grid;gap:8px;margin-top:12px">
+        <div style="background:#1A1D20;border-radius:8px;padding:14px;display:flex;justify-content:space-between"><div><b>Milestone 1</b><br><span style="color:var(--dim);font-size:13px">Week 1: screen capture + AI pipeline working</span></div><span style="font:600 18px var(--mono);color:var(--green)">$1,500</span></div>
+        <div style="background:#1A1D20;border-radius:8px;padding:14px;display:flex;justify-content:space-between"><div><b>Milestone 2</b><br><span style="color:var(--dim);font-size:13px">Weeks 2-3: trading logic, voice, polish, TestFlight</span></div><span style="font:600 18px var(--mono);color:var(--green)">$2,000</span></div>
+      </div>
+      <h3 style="margin-top:18px">What I need from you</h3>
+      <div style="display:grid;gap:6px;font-size:13px">
+        <div style="background:#1A1D20;border-radius:6px;padding:8px 12px">Your prototype source code bundle</div>
+        <div style="background:#1A1D20;border-radius:6px;padding:8px 12px">Your documented trading rules (the full setup sequence)</div>
+        <div style="background:#1A1D20;border-radius:6px;padding:8px 12px">Screenshots of your TradingView/Tradovate setup with indicators visible</div>
+        <div style="background:#1A1D20;border-radius:6px;padding:8px 12px">Your Apple Developer account for TestFlight</div>
+        <div style="background:#1A1D20;border-radius:6px;padding:8px 12px">OpenAI API key (GPT-4o, you control the billing)</div>
+      </div>
+      <h3 style="margin-top:18px">Honest constraints</h3>
+      <div style="display:grid;gap:6px;font-size:13px;color:var(--dim)">
+        <div style="background:#1A1D20;border-radius:6px;padding:8px 12px">iOS shows a visible broadcast indicator (orange dot) while capturing. There is no way around this — it's an Apple requirement.</div>
+        <div style="background:#1A1D20;border-radius:6px;padding:8px 12px">The Broadcast Extension has a 50MB memory limit. All frame processing must be lightweight.</div>
+        <div style="background:#1A1D20;border-radius:6px;padding:8px 12px">GPT-4o Vision has ~2-3s latency per frame. The state machine bridges the gaps, but the system cannot react faster than the API.</div>
+        <div style="background:#1A1D20;border-radius:6px;padding:8px 12px">App Store distribution is unlikely — Apple would reject an app that reads other apps' screens. TestFlight and enterprise distribution are the path.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+// Tabs
+document.querySelector('.tabs').addEventListener('click',function(e){
+  var b=e.target.closest('[role=tab]');if(!b)return;
+  document.querySelectorAll('[role=tab]').forEach(function(t){t.setAttribute('aria-selected','false')});
+  b.setAttribute('aria-selected','true');
+  document.querySelectorAll('.panel').forEach(function(p){p.hidden=p.id!==b.dataset.tab});
+});
+// State machine stepper
+var step=0,names=['WAIT','WAIT','WAIT','WATCH LONG','WATCH LONG','WATCH LONG','CONFIRMED LONG'];
+var classes=['wait','wait','wait','watch','watch','watch','conf'];
+document.getElementById('smstep').addEventListener('click',function(){
+  if(step>=6)return;step++;
+  document.querySelectorAll('#states .sname').forEach(function(s,i){
+    s.className='sname '+(i===step?classes[i]+' act':classes[i]);
+    if(i<=step)s.textContent=names[i];
+  });
+  document.getElementById('smstage').textContent='Step '+(step+1)+' of 7';
+});
+document.getElementById('smreset').addEventListener('click',function(){
+  step=0;
+  document.querySelectorAll('#states .sname').forEach(function(s,i){
+    s.className='sname '+(i===0?'wait act':'wait');s.textContent='WAIT';
+  });
+  document.getElementById('smstage').textContent='';
+});
+</script>
+</body>
+</html>
